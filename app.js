@@ -3,6 +3,9 @@ const mainStat = document.getElementById('main-stat');
 const subStat = document.getElementById('sub-stat');
 const statusMessage = document.getElementById('status-message');
 const progressRingCircle = document.getElementById('progress-ring-circle');
+const weeklyTrend = document.getElementById('weekly-trend');
+const trendArrow = document.getElementById('trend-arrow');
+const trendText = document.getElementById('trend-text');
 const lapseBtn = document.getElementById('lapse-btn');
 const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
@@ -15,6 +18,8 @@ const hardResetBtn = document.getElementById('hard-reset-btn');
 const exportDataBtn = document.getElementById('export-data-btn');
 const importDataBtn = document.getElementById('import-data-btn');
 const importDataFile = document.getElementById('import-data-file');
+const resiliencyModal = document.getElementById('resiliency-modal');
+const closeResiliencyBtn = document.getElementById('close-resiliency-btn');
 const toast = document.getElementById('toast');
 
 // State
@@ -125,8 +130,48 @@ function calculateStats() {
     };
 }
 
+function getWeeklyTrend() {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    // Check if we have data for both days
+    const todayHasLapse = appState.lapses.includes(todayStr);
+    const yesterdayHasLapse = appState.lapses.includes(yesterdayStr);
+    
+    // Day 1 special case: always show trend
+    if (yesterday < new Date(appState.startDate)) {
+        if (todayHasLapse) {
+            return { type: 'declining', color: '#ef4444' };
+        } else {
+            return { type: 'improving', color: '#3b82f6' };
+        }
+    }
+    
+    // Determine trend based on today vs yesterday
+    if (!todayHasLapse && yesterdayHasLapse) {
+        // Successful today after lapse yesterday = improving
+        return { type: 'improving', color: '#3b82f6' };
+    } else if (todayHasLapse && !yesterdayHasLapse) {
+        // Lapse today after success yesterday = declining
+        return { type: 'declining', color: '#ef4444' };
+    } else if (!todayHasLapse && !yesterdayHasLapse) {
+        // Success both days = improving
+        return { type: 'improving', color: '#3b82f6' };
+    } else if (todayHasLapse && yesterdayHasLapse) {
+        // Lapse both days = declining
+        return { type: 'declining', color: '#ef4444' };
+    }
+    
+    return null;
+}
+
 function updateUI() {
     const stats = calculateStats();
+    const weeklyTrendData = getWeeklyTrend();
     
     let mainText = '';
     let subText = '';
@@ -156,6 +201,27 @@ function updateUI() {
     mainStat.textContent = mainText;
     subStat.textContent = subText;
     statusMessage.innerHTML = messageText;
+    
+    // Update weekly trend display
+    if (weeklyTrend) {
+        if (weeklyTrendData && weeklyTrendData.type) {
+            weeklyTrend.style.display = 'flex';
+            weeklyTrend.className = 'weekly-trend ' + weeklyTrendData.type;
+            
+            if (weeklyTrendData.type === 'improving') {
+                trendArrow.textContent = '↑';
+                trendText.textContent = 'Improving';
+            } else if (weeklyTrendData.type === 'stable') {
+                trendArrow.textContent = '→';
+                trendText.textContent = 'Stable';
+            } else if (weeklyTrendData.type === 'declining') {
+                trendArrow.textContent = '↓';
+                trendText.textContent = 'Declining';
+            }
+        } else {
+            weeklyTrend.style.display = 'none';
+        }
+    }
     
     // Avoid animation glitches by setting timeout minimally
     setTimeout(() => {
@@ -256,6 +322,22 @@ function bindEvents() {
     
     closeSettingsBtn.addEventListener('click', () => {
         settingsModal.classList.add('hidden');
+    });
+    
+    // Resiliency modal events
+    weeklyTrend.addEventListener('click', () => {
+        resiliencyModal.classList.remove('hidden');
+    });
+    
+    closeResiliencyBtn.addEventListener('click', () => {
+        resiliencyModal.classList.add('hidden');
+    });
+    
+    // Close on backdrop click
+    resiliencyModal.addEventListener('click', (e) => {
+        if (e.target === resiliencyModal) {
+            resiliencyModal.classList.add('hidden');
+        }
     });
     
     // Close on backdrop click

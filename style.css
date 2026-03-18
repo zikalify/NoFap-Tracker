@@ -12,6 +12,9 @@
     --danger-color: #ef4444;
     --danger-hover: #dc2626;
     --success-color: #10b981;
+    --trend-improving: #3b82f6; /* Electric blue */
+    --trend-stable: #10b981; /* Green */
+    --trend-declining: #ef4444; /* Red */
     
     --ring-bg: #21262d;
     
@@ -121,15 +124,88 @@ main {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 40px;
+    gap: 20px;
+    padding: 10px 0;
+    max-height: 100vh;
+    max-height: 100dvh; /* Dynamic viewport for Android */
+    overflow: hidden;
 }
 
 .stats-card {
     position: relative;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     width: 100%;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.weekly-trend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--surface-color);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--surface-border);
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.weekly-trend.clickable:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.resiliency-in-pill {
+    color: var(--text-secondary);
+    margin-right: 4px;
+}
+
+.trend-arrow {
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: -0.25em;
+    margin-top: 2px;
+}
+
+.trend-text {
+    color: var(--text-secondary);
+}
+
+.weekly-trend.improving {
+    border-color: var(--trend-improving);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.weekly-trend.improving .trend-arrow {
+    color: var(--trend-improving);
+}
+
+.weekly-trend.stable {
+    border-color: var(--trend-stable);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.weekly-trend.stable .trend-arrow {
+    color: var(--trend-stable);
+}
+
+.weekly-trend.declining {
+    border-color: var(--trend-declining);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.weekly-trend.declining .trend-arrow {
+    color: var(--trend-declining);
 }
 
 .progress-ring-container {
@@ -139,6 +215,7 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .progress-ring {
@@ -262,6 +339,45 @@ main {
 
 .btn-block {
     width: 100%;
+}
+
+/* Trend Explanation */
+.trend-explanation {
+    margin: 20px 0;
+}
+
+.trend-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--surface-color);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--surface-border);
+}
+
+.trend-item .trend-arrow {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.trend-item strong {
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.trend-item p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.mt-lg {
+    margin-top: 24px;
 }
 
 /* Modal */
@@ -462,7 +578,164 @@ label {
     .progress-ring-container {
         transform: scale(0.85);
     }
+}
+
+/* Extra small screens - feature phones */
+@media (max-width: 320px) {
     main {
-        gap: 20px;
+        gap: 10px;
+        padding: 5px 0;
+    }
+    
+    .progress-ring-container {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .progress-ring {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .progress-ring__bg,
+    .progress-ring__circle {
+        r: 75;
+        cx: 90;
+        cy: 90;
+    }
+    
+    .main-stat {
+        font-size: 2rem;
+    }
+    
+    .sub-stat {
+        font-size: 0.8rem;
+    }
+    
+    .weekly-trend {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+    }
+    
+    .resiliency-in-pill {
+        font-size: 0.7rem;
+    }
+}
+
+/* Standard mobile */
+@media (max-width: 400px), (max-height: 600px) {
+    main {
+        gap: 15px;
+        padding: 5px 0;
+    }
+    
+    .progress-ring-container {
+        width: 220px;
+        height: 220px;
+        transform: scale(1);
+    }
+    
+    .progress-ring {
+        width: 220px;
+        height: 220px;
+    }
+    
+    .progress-ring__bg,
+    .progress-ring__circle {
+        r: 95;
+        cx: 110;
+        cy: 110;
+    }
+    
+    .stats-center {
+        text-align: center;
+    }
+    
+    .main-stat {
+        font-size: 2.5rem;
+    }
+    
+    .sub-stat {
+        font-size: 0.9rem;
+    }
+    
+    .weekly-trend {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+    
+    .message-container {
+        margin: 0 10px;
+    }
+    
+    .status-message {
+        font-size: 0.9rem;
+    }
+}
+
+/* Landscape orientation */
+@media (orientation: landscape) and (max-height: 500px) {
+    main {
+        gap: 8px;
+        padding: 2px 0;
+    }
+    
+    .progress-ring-container {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .progress-ring {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .progress-ring__bg,
+    .progress-ring__circle {
+        r: 65;
+        cx: 80;
+        cy: 80;
+    }
+    
+    .main-stat {
+        font-size: 1.8rem;
+    }
+    
+    .sub-stat {
+        font-size: 0.7rem;
+    }
+    
+    .weekly-trend {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+    }
+    
+    .status-message {
+        font-size: 0.8rem;
+    }
+    
+    .actions {
+        margin-top: 10px;
+    }
+}
+
+/* iOS Safari safe area support */
+@supports (padding: max(0px)) {
+    .app-container {
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+}
+
+/* Very tall screens - tablets in portrait */
+@media (min-height: 1200px) {
+    main {
+        gap: 30px;
+        padding: 20px 0;
+    }
+    
+    .progress-ring-container {
+        transform: scale(1.1);
     }
 }
