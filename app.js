@@ -43,6 +43,22 @@ function setProgress(percent) {
 let waveAnimationId = null;
 let waveTargetPercent = 0;
 
+// Ring pulse animation - runs always
+const glowFilter = document.querySelector('#glow feGaussianBlur');
+
+function ringPulseLoop(timestamp) {
+    // Slow breath: ~4 seconds per cycle
+    const pulse = Math.sin(timestamp * 0.00075);
+    // stdDeviation pulses between 5 and 12
+    const blur = 8 + pulse * 4;
+    // stroke-width pulses between 14 and 18
+    const stroke = 16 + pulse * 2;
+    if (glowFilter) glowFilter.setAttribute('stdDeviation', blur.toFixed(2));
+    progressRingCircle.setAttribute('stroke-width', stroke.toFixed(2));
+    requestAnimationFrame(ringPulseLoop);
+}
+requestAnimationFrame(ringPulseLoop);
+
 function drawWaveFrame(percent, timestamp) {
     const circleRadius = 104;
     const circleCenterY = 140;

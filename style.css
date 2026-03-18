@@ -181,6 +181,7 @@ main {
     justify-content: center;
     align-items: center;
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 .progress-ring {
@@ -196,6 +197,7 @@ main {
 
 .progress-ring__circle {
     transition: stroke-dashoffset 1s ease-in-out;
+    stroke-width: 16;
 }
 
 .stats-center {
@@ -546,7 +548,7 @@ input[type="date"]::-webkit-datetime-edit-year-field {
     position: fixed;
     bottom: 30px;
     left: 50%;
-    transform: translateX(-50%) translateY(100px);
+    transform: translateX(-50%) translateY(200px);
     background: var(--surface-hover);
     color: var(--text-primary);
     padding: 12px 24px;
@@ -557,10 +559,12 @@ input[type="date"]::-webkit-datetime-edit-year-field {
     z-index: 1000;
     pointer-events: none;
     border: 1px solid var(--surface-border);
+    visibility: hidden;
 }
 
 .toast.show {
     transform: translateX(-50%) translateY(0);
+    visibility: visible;
 }
 
 /* Strong Recovery Animations */
