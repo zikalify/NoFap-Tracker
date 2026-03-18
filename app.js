@@ -12,6 +12,9 @@ const addLapseDateInput = document.getElementById('add-lapse-date');
 const addLapseBtn = document.getElementById('add-lapse-btn');
 const lapsesList = document.getElementById('lapses-list');
 const hardResetBtn = document.getElementById('hard-reset-btn');
+const exportDataBtn = document.getElementById('export-data-btn');
+const importDataBtn = document.getElementById('import-data-btn');
+const importDataFile = document.getElementById('import-data-file');
 const toast = document.getElementById('toast');
 
 // State
@@ -314,6 +317,48 @@ function bindEvents() {
             settingsModal.classList.add('hidden');
             showToast('All data erased.');
         }
+    });
+
+    exportDataBtn.addEventListener('click', () => {
+        const dataStr = JSON.stringify(appState, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = 'nofap_tracker_backup.json';
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        showToast('Data exported successfully.');
+    });
+
+    importDataBtn.addEventListener('click', () => {
+        importDataFile.click();
+    });
+
+    importDataFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const importedData = JSON.parse(event.target.result);
+                if (importedData.startDate && Array.isArray(importedData.lapses)) {
+                    appState = importedData;
+                    saveData();
+                    updateUI();
+                    renderLapsesList();
+                    startDateInput.value = appState.startDate;
+                    showToast('Data imported successfully.');
+                } else {
+                    showToast('Invalid data format.', 4000);
+                }
+            } catch (error) {
+                showToast('Error parsing file.', 4000);
+            }
+        };
+        reader.readAsText(file);
+        importDataFile.value = ''; // Reset file input
     });
 }
 
