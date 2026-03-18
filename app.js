@@ -44,19 +44,9 @@ let waveAnimationId = null;
 let waveTargetPercent = 0;
 
 // Ring pulse animation - runs always
-const glowFilter = document.querySelector('#glow feGaussianBlur');
 const ringGradientEl = document.getElementById('ring-gradient');
 
 function ringPulseLoop(timestamp) {
-    // Slow breath: ~4 seconds per cycle
-    const pulse = Math.sin(timestamp * 0.00075);
-    // stdDeviation pulses between 6 and 10
-    const blur = 8 + pulse * 2;
-    // stroke-width pulses between 14 and 18
-    const stroke = 16 + pulse * 2;
-    if (glowFilter) glowFilter.setAttribute('stdDeviation', blur.toFixed(2));
-    progressRingCircle.setAttribute('stroke-width', stroke.toFixed(2));
-
     // Spin gradient angle slowly (~20 seconds per full rotation)
     const angle = (timestamp * 0.018) % 360;
     const rad = (angle * Math.PI) / 180;
@@ -70,7 +60,6 @@ function ringPulseLoop(timestamp) {
         ringGradientEl.setAttribute('x2', x2);
         ringGradientEl.setAttribute('y2', y2);
     }
-
     requestAnimationFrame(ringPulseLoop);
 }
 requestAnimationFrame(ringPulseLoop);

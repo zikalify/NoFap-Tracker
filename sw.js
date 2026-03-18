@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reset-tracker-v13';
+const CACHE_NAME = 'reset-tracker-v14';
 const ASSETS = [
     './',
     './index.html',
