@@ -1,6 +1,6 @@
 {
-    "name": "NoFap Tracker",
-    "short_name": "NoFap Tracker",
+    "name": "Reset Tracker",
+    "short_name": "Reset Tracker",
     "description": "Track your journey and streak visually.",
     "start_url": "./index.html",
     "display": "standalone",

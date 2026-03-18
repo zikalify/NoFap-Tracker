@@ -125,7 +125,7 @@ function init() {
 }
 
 function loadData() {
-    const saved = localStorage.getItem('nofap_tracker_state');
+    const saved = localStorage.getItem('reset_tracker_state');
     if (saved) {
         try {
             const parsedState = JSON.parse(saved);
@@ -156,7 +156,7 @@ function loadData() {
 }
 
 function saveData() {
-    localStorage.setItem('nofap_tracker_state', JSON.stringify(appState));
+    localStorage.setItem('reset_tracker_state', JSON.stringify(appState));
 }
 
 function calculateStats() {
@@ -889,7 +889,7 @@ function bindEvents() {
     exportDataBtn.addEventListener('click', () => {
         const dataStr = JSON.stringify(appState, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        const exportFileDefaultName = 'nofap_tracker_backup.json';
+        const exportFileDefaultName = 'reset_tracker_backup.json';
         
         const linkElement = document.createElement('a');
         linkElement.setAttribute('href', dataUri);
