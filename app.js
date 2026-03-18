@@ -23,7 +23,9 @@ const toast = document.getElementById('toast');
 let appState = {
     startDate: null,
     lapses: [], // Array of 'YYYY-MM-DD' strings
-    ninetyEightPercentDate: null // Date when 98% was first achieved or re-achieved
+    ninetyEightPercentDate: null, // Date when 98% was first achieved or re-achieved
+    waveProgress: 0, // 0-100, persisted wave fill level
+    waveLastUpdated: null // YYYY-MM-DD string, last day wave was updated
 };
 
 // SVG Circle properties
@@ -63,6 +65,22 @@ function ringPulseLoop(timestamp) {
     requestAnimationFrame(ringPulseLoop);
 }
 requestAnimationFrame(ringPulseLoop);
+
+function setWaveColor(increasing) {
+    const waveGrad = document.getElementById('wave-gradient');
+    if (!waveGrad) return;
+    const st1 = waveGrad.querySelector('stop:nth-child(1)');
+    const st2 = waveGrad.querySelector('stop:nth-child(2)');
+    if (increasing) {
+        // Soft green
+        st1.setAttribute('stop-color', '#6ee7b7');
+        st2.setAttribute('stop-color', '#34d399');
+    } else {
+        // Soft red
+        st1.setAttribute('stop-color', '#fca5a5');
+        st2.setAttribute('stop-color', '#f87171');
+    }
+}
 
 function drawWaveFrame(percent, timestamp) {
     const circleRadius = 104;
@@ -168,32 +186,42 @@ function init() {
 }
 
 function loadData() {
+    // Migrate from old key if present
+    const oldSaved = localStorage.getItem('nofap_tracker_state');
+    if (oldSaved) {
+        localStorage.setItem('reset_tracker_state', oldSaved);
+        localStorage.removeItem('nofap_tracker_state');
+    }
+
     const saved = localStorage.getItem('reset_tracker_state');
     if (saved) {
         try {
             const parsedState = JSON.parse(saved);
-            // Merge with default state to ensure all properties exist
             appState = {
                 startDate: null,
                 lapses: [],
                 ninetyEightPercentDate: null,
+                waveProgress: 0,
+                waveLastUpdated: null,
                 ...parsedState
             };
         } catch (e) {
             console.error('Failed to parse state:', e);
-            // Reset to default state if parsing fails
             appState = {
                 startDate: null,
                 lapses: [],
-                ninetyEightPercentDate: null
+                ninetyEightPercentDate: null,
+                waveProgress: 0,
+                waveLastUpdated: null
             };
         }
     } else {
-        // Initialize with default state if no saved data
         appState = {
             startDate: null,
             lapses: [],
-            ninetyEightPercentDate: null
+            ninetyEightPercentDate: null,
+            waveProgress: 0,
+            waveLastUpdated: null
         };
     }
 }
@@ -277,18 +305,10 @@ function checkStrongRecovery(stats) {
 }
 
 function checkStableRecovery(stats) {
-    // White theme triggers when the overall score (what's shown in the circle)
-    // has been at 98%+ continuously for at least 6 months.
-    // ninetyEightPercentDate holds the date the score reached 98% and stayed there.
+    // Stable recovery is achieved when waveProgress reaches 100
+    // AND currently at 98%+
     if (stats.percentage < 98) return false;
-    if (!appState.ninetyEightPercentDate) return false;
-
-    const today = new Date();
-    const sinceDate = new Date(appState.ninetyEightPercentDate);
-    if (isNaN(sinceDate.getTime())) return false;
-
-    const daysSince = Math.floor((today - sinceDate) / (1000 * 60 * 60 * 24));
-    return daysSince >= 180;
+    return appState.waveProgress >= 100;
 }
 
 function calculateStableRecoveryProgress(stats) {
@@ -304,6 +324,49 @@ function calculateStableRecoveryProgress(stats) {
     const daysSince = Math.floor((today - sinceDate) / (1000 * 60 * 60 * 24));
     const progress = Math.min((daysSince / 180) * 100, 100);
     return progress;
+}
+
+function updateWaveProgress(stats) {
+    // Wave only exists if 98% has ever been achieved
+    if (!appState.ninetyEightPercentDate) {
+        appState.waveProgress = 0;
+        return;
+    }
+
+    const todayStr = getTodayString();
+    const lastUpdated = appState.waveLastUpdated;
+
+    // First time running — initialise from ninetyEightPercentDate
+    if (!lastUpdated) {
+        const sinceDate = new Date(appState.ninetyEightPercentDate);
+        const today = new Date(todayStr);
+        const daysSince = Math.max(0, Math.floor((today - sinceDate) / (1000 * 60 * 60 * 24)));
+        appState.waveProgress = Math.min((daysSince / 180) * 100, 100);
+        appState.waveLastUpdated = todayStr;
+        saveData();
+        return;
+    }
+
+    if (lastUpdated === todayStr) return; // Already updated today
+
+    // Count days elapsed since last update
+    const last = new Date(lastUpdated);
+    const today = new Date(todayStr);
+    const daysElapsed = Math.floor((today - last) / (1000 * 60 * 60 * 24));
+    if (daysElapsed <= 0) return;
+
+    // Rate: 1/180 of full wave per day
+    const ratePerDay = (1 / 180) * 100;
+    const delta = daysElapsed * ratePerDay;
+
+    if (stats.percentage >= 98) {
+        appState.waveProgress = Math.min(appState.waveProgress + delta, 100);
+    } else {
+        appState.waveProgress = Math.max(appState.waveProgress - delta, 0);
+    }
+
+    appState.waveLastUpdated = todayStr;
+    saveData();
 }
 
 function calculateRecoveryDuration() {
@@ -442,10 +505,8 @@ function calculateNinetyEightPercentDate() {
 
 function checkAndUpdateNinetyEightPercentDate(stats) {
     if (stats.percentage < 98) {
-        if (appState.ninetyEightPercentDate) {
-            appState.ninetyEightPercentDate = null;
-            saveData();
-        }
+        // Don't clear ninetyEightPercentDate — we need it to track wave history
+        // even when below 98%. Just leave it as-is.
         return;
     }
 
@@ -470,6 +531,9 @@ function updateUI() {
         
         // Check and update 98% achievement date
         checkAndUpdateNinetyEightPercentDate(stats);
+
+        // Update wave progress (fill or drain based on current percentage)
+        updateWaveProgress(stats);
         
         let mainText = '';
         let subText = '';
@@ -495,10 +559,12 @@ function updateUI() {
             // Tiered goal logic based on current performance
             const today = new Date();
             
-            // Check for stable recovery (6+ months at 98%+)
+            // Check for stable recovery (wave at 100% and above 98%)
             const hasStableRecovery = checkStableRecovery(stats);
-            const stableRecoveryProgress = calculateStableRecoveryProgress(stats);
-            const isInStableRecoveryProgress = stats.percentage >= 98 && appState.ninetyEightPercentDate && !hasStableRecovery;
+            const stableRecoveryProgress = appState.waveProgress;
+            const waveVisible = appState.waveProgress > 0 && !hasStableRecovery;
+            const isInStableRecoveryProgress = waveVisible && stats.percentage >= 98;
+            const waveIncreasing = stats.percentage >= 98;
             
             if (hasStableRecovery) {
                 // Apply bright theme and show stable recovery message
@@ -585,7 +651,8 @@ function updateUI() {
                 // Update progress ring normally and show wave fill
                 setTimeout(() => {
                     setProgress(progressVal);
-                    setWaveFill(stableRecoveryProgress); // Set wave fill based on stable recovery progress
+                    setWaveFill(stableRecoveryProgress);
+                    setWaveColor(waveIncreasing);
                     
                     const ringGrad = document.getElementById('ring-gradient');
                     const st1 = ringGrad.querySelector('stop:nth-child(1)');
@@ -695,7 +762,7 @@ function updateUI() {
                 const neededSuccesses = Math.ceil(((targetDecimal * stats.totalDays) - stats.successfulDaysCount) / (1 - targetDecimal));
                 
                 // Check if user has already lapsed today
-                const todayStr = today.toISOString().split('T')[0];
+                const todayStr = getTodayString();
                 const hasLapsedToday = appState.lapses.includes(todayStr);
                 
                 // For 98%+ users, show when they achieved it (now that neededSuccesses is defined)
@@ -739,7 +806,13 @@ function updateUI() {
         // Avoid animation glitches by setting timeout minimally
         setTimeout(() => {
             setProgress(progressVal);
-            setWaveFill(0); // Hide wave fill for normal operation
+            // Show wave if draining (waveProgress > 0), otherwise hide
+            if (appState.waveProgress > 0) {
+                setWaveFill(appState.waveProgress);
+                setWaveColor(false); // draining = red
+            } else {
+                setWaveFill(0);
+            }
             
             // Change color based on percentage
             const ringGrad = document.getElementById('ring-gradient');
@@ -872,6 +945,10 @@ function bindEvents() {
         const val = e.target.value;
         if (val) {
             appState.startDate = val;
+            // Reset wave so it recalculates from new start date
+            appState.waveProgress = 0;
+            appState.waveLastUpdated = null;
+            appState.ninetyEightPercentDate = null;
             saveData();
             updateUI();
         }
@@ -915,7 +992,9 @@ function bindEvents() {
             appState = {
                 startDate: getTodayString(),
                 lapses: [],
-                ninetyEightPercentDate: null
+                ninetyEightPercentDate: null,
+                waveProgress: 0,
+                waveLastUpdated: null
             };
             saveData();
             updateUI();
