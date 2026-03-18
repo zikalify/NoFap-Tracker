@@ -59,10 +59,12 @@ body {
 .app-container {
     max-width: 600px;
     margin: 0 auto;
-    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     padding: 20px;
+    overflow: hidden;
 }
 
 /* Header */
