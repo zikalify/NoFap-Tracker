@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reset-tracker-v24';
+const CACHE_NAME = 'reset-tracker-v25';
 const ASSETS = [
     './',
     './index.html',
@@ -54,7 +54,11 @@ self.addEventListener('fetch', event => {
                         
                     return response;
                 }).catch(() => {
-                    // Fallback block if network completely offline and resource not cached
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('./index.html');
+                    }
+
+                    return Response.error();
                 });
             })
     );

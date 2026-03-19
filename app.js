@@ -153,8 +153,14 @@ function showToast(message, duration = 3000) {
 function getTodayString() {
     const today = new Date();
     // Adjust for timezone to get local YYYY-MM-DD
-    const offset = today.getTimezoneOffset()
-    const localDate = new Date(today.getTime() - (offset*60*1000))
+    const offset = today.getTimezoneOffset();
+    const localDate = new Date(today.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+}
+
+function getLocalDateString(date) {
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
     return localDate.toISOString().split('T')[0];
 }
 
@@ -391,8 +397,8 @@ function getWeeklyTrend() {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
-    const todayStr = today.toISOString().split('T')[0];
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const todayStr = getLocalDateString(today);
+    const yesterdayStr = getLocalDateString(yesterday);
     
     // Check if we have data for both days
     const todayHasLapse = appState.lapses.includes(todayStr);
@@ -443,7 +449,7 @@ function calculateCurrentStreak() {
     for (let i = 0; i < 365; i++) {
         const checkDate = new Date(today);
         checkDate.setDate(today.getDate() - i);
-        const dateStr = checkDate.toISOString().split('T')[0];
+        const dateStr = getLocalDateString(checkDate);
         
         if (checkDate < new Date(appState.startDate)) {
             break;
@@ -480,7 +486,7 @@ function calculateNinetyEightPercentDate() {
     for (let i = 0; i < totalDaysOverall; i++) {
         const checkDate = new Date(start);
         checkDate.setDate(start.getDate() + i);
-        const checkStr = checkDate.toISOString().split('T')[0];
+        const checkStr = getLocalDateString(checkDate);
 
         if (lapseSet.has(checkStr)) lapsesSoFar++;
 
@@ -500,7 +506,7 @@ function calculateNinetyEightPercentDate() {
     // Day after the last dip is when >=98% was regained and held
     const recoveryDate = new Date(lastDipDate);
     recoveryDate.setDate(lastDipDate.getDate() + 1);
-    return recoveryDate.toISOString().split('T')[0];
+    return getLocalDateString(recoveryDate);
 }
 
 function checkAndUpdateNinetyEightPercentDate(stats) {
@@ -682,7 +688,7 @@ function updateUI() {
             
             if (stats.percentage >= 100) {
                 // Perfect record — calculate cost of lapsing today
-                const todayStr100 = new Date().toISOString().split('T')[0];
+                const todayStr100 = getTodayString();
                 const hasLapsedToday100 = appState.lapses.includes(todayStr100);
                 if (!hasLapsedToday100) {
                     // After a lapse: (totalDays successful, totalDays+1 total)
