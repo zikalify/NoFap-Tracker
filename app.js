@@ -555,16 +555,12 @@ function updateUI() {
         let messageText = '';
         let progressVal = 100;
         
-        if (stats.totalDays <= 1) {
-            console.log('>>> ENTERED DAY 1 BRANCH');
+        if (stats.totalDays <= 0) {
+            console.log('>>> ENTERED EMPTY STATE BRANCH');
             mainText = `${Math.floor(stats.percentage)}%`;
             subText = 'Success Rate';
             progressVal = stats.percentage;
-            let day1Message = 'Every journey begins with a single step.';
-            if (stats.successfulDaysCount >= 1) {
-                day1Message += ` <span style="color: var(--text-muted); font-size: 0.95em;">Relapsing today would reset you to 0%.</span>`;
-            }
-            messageText = day1Message;
+            messageText = 'Start your journey today.';
         } else {
             console.log('>>> ENTERED PERCENTAGE BRANCH');
             mainText = `${Math.floor(stats.percentage)}%`;
