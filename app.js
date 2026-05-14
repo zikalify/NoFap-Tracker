@@ -17,6 +17,9 @@ const hardResetBtn = document.getElementById('hard-reset-btn');
 const exportDataBtn = document.getElementById('export-data-btn');
 const importDataBtn = document.getElementById('import-data-btn');
 const importDataFile = document.getElementById('import-data-file');
+const howItWorksBtn = document.getElementById('how-it-works-btn');
+const howItWorksContent = document.getElementById('how-it-works-content');
+const howItWorksContainer = document.getElementById('how-it-works-container');
 const toast = document.getElementById('toast');
 
 // State
@@ -923,6 +926,11 @@ function bindEvents() {
         if(confirm('Are you sure you want to log a lapse for today?')) {
             logLapseForToday();
         }
+    });
+
+    howItWorksBtn.addEventListener('click', () => {
+        howItWorksContent.classList.toggle('hidden');
+        howItWorksContainer.classList.toggle('expanded');
     });
     
     settingsBtn.addEventListener('click', () => {
